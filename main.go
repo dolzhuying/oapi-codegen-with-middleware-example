@@ -10,6 +10,39 @@ import (
 	gen "oapi-codegen-with-middleware-example/generated"
 )
 
+// Global middleware
+func globalMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		log.Println("Global middleware: before request")
+		c.Next()
+		log.Println("Global middleware: after request")
+	}
+}
+
+// Middleware that runs before the request
+func beforeMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		log.Println("Before request middleware")
+		c.Next() // Pass control to the next handler
+	}
+}
+
+// Middleware that runs after the request
+func afterMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next() // Pass control to the next handler
+		log.Println("After request middleware")
+	}
+}
+
+// Middleware specific to  POST /items routes
+func adminMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		log.Println("Admin-specific middleware")
+		c.Next() // Pass control to the next handler
+	}
+}
+
 // Implementing the ServerInterface defined in the generated code
 type Server struct{}
 
@@ -52,8 +85,23 @@ func main() {
 
 	server := &Server{}
 
-	// Register the generated server routes
-	gen.RegisterHandlers(router, server)
+	// Apply global middleware
+	router.Use(globalMiddleware())
+
+	// Create a route group with before and after middleware
+	apiGroup := router.Group("/")
+	{
+		apiGroup.Use(beforeMiddleware())
+		apiGroup.Use(afterMiddleware())
+		// Register the generated server routes within the group
+		gen.RegisterHandlersWithOptions(apiGroup, server, gen.GinServerOptions{})
+	}
+
+	adminGroup := router.Group("/items")
+	{
+		adminGroup.Use(adminMiddleware())
+		gen.RegisterHandlersWithOptions(adminGroup, server, gen.GinServerOptions{})
+	}
 
 	log.Println("Starting server on :8080")
 	if err := router.Run(":8080"); err != nil {
