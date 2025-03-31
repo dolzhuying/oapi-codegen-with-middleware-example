@@ -18,3 +18,8 @@ type NewItem struct {
 
 // PostItemsJSONRequestBody defines body for PostItems for application/json ContentType.
 type PostItemsJSONRequestBody = NewItem
+
+type Response struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}

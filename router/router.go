@@ -12,13 +12,13 @@ func SetupRouter() *gin.Engine {
     router := gin.Default()
     
     // 全局中间件
-    router.Use(middlewares.GlobalMiddleware)
+    router.Use(middlewares.GlobalMiddleware())
     
     // API分组使用特定中间件
     apiGroup := router.Group("/api")
     apiGroup.Use(
-        middlewares.AuthMiddleware,
-        middlewares.LoggingMiddleware,
+        middlewares.AuthMiddleware(),
+        middlewares.LoggingMiddleware(),
     )
     
     //为实现了ServerInterface的server注册路由
